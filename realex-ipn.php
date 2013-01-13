@@ -198,6 +198,7 @@ $realexmd5 = $_POST['MD5HASH'];
 $user_id = $_POST['uid'];
 $merchantid = get_option( 'em_realex_redirect_merchant_id', "FALSE" );
 $secret = get_option( 'em_realex_redirect_merchant_secret', "FALSE" );
+$account = get_option( 'em_realex_redirect_merchant_account', "internet" );
 //---------------------------------------------------------------
 $tmp = "$timestamp.$merchantid.$orderid.$result.$message.$pasref.$authcode";
 $md5hash = md5($tmp);
@@ -321,7 +322,7 @@ if ($md5hash != $realexmd5) {
 			$out .= '<p>There was an error processing your payment.<br />To try again please <a href="http://bhaa.ie/events">go back to the bhaa event page.</a></p>';
 		}
 		
-	//! start email handler
+		//! start email handler
 		$EM_Event = new EM_Event($event_id);
 		$user_data= get_userdata($user_id);
 		$EM_Location = em_get_location($EM_Event->location_id);

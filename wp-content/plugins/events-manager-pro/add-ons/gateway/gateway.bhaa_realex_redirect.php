@@ -187,6 +187,7 @@ class EM_Gateway_realex_redirect extends EM_Gateway {
 		//The code below is used to create the timestamp format required by realex_redirect Payments
 		$timestamp = strftime("%Y%m%d%H%M%S");
 		$merchantid = get_option('em_'.$this->gateway."_merchant_id" );
+		$merchantaccount = get_option('em_'.$this->gateway."_merchant_account" );
 		$uid=get_current_user_id();
 		$orderid = "$uid-$timestamp";
 		$currency=get_option('dbem_bookings_currency', 'EUR');
@@ -201,7 +202,7 @@ class EM_Gateway_realex_redirect extends EM_Gateway {
 			'TIMESTAMP'=> $timestamp,
 			'MERCHANT_ID' => $merchantid ,
 			'ORDER_ID' => $orderid,
-			'ACCOUNT' => "internet",
+			'ACCOUNT' => $merchantaccount,
 			'CURRENCY' => $currency,
 			'CUST_NUM' => $uid,
 			'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'],
@@ -373,6 +374,12 @@ BHAA Events Manager
 			  </td>
 		  </tr>
 		  <tr valign="top">
+			  <th scope="row"><?php _e('realex_redirect Merchant Account', 'em-pro') ?></th>
+				  <td><input type="text" name="<?php echo $this->gateway; ?>_merchant_account" value="<?php esc_attr_e( get_option('em_'. $this->gateway . "_merchant_account" )); ?>" />
+				  <br />
+			  </td>
+		  </tr>
+		  <tr valign="top">
 			  <th scope="row"><?php _e('realex_redirect Currency', 'em-pro') ?></th>
 			  <td><?php echo esc_html(get_option('dbem_bookings_currency', 'EUR')); ?><br /><i><?php echo sprintf(__('Set your currency in the <a href="%s">settings</a> page.', 'dbem'), EM_ADMIN_URL.'&amp;page=events-manager-options'); ?></i></td>
 		  </tr>
@@ -406,6 +413,7 @@ BHAA Events Manager
 			$this->gateway . "_site" => $_REQUEST[ $this->gateway.'_site' ],
 			$this->gateway . "_merchant_id" => $_REQUEST[ $this->gateway.'_merchant_id' ],
 			$this->gateway . "_merchant_secret" => $_REQUEST[ $this->gateway.'_merchant_secret' ],
+			$this->gateway . "_merchant_account" => $_REQUEST[ $this->gateway.'_merchant_account' ],
 			$this->gateway . "_currency" => $_REQUEST[ 'currency' ],
 			$this->gateway . "_tax" => $_REQUEST[ $this->gateway.'_button' ],
 			$this->gateway . "_format_logo" => $_REQUEST[ $this->gateway.'_format_logo' ],

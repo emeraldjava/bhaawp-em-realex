@@ -625,3 +625,5 @@ include('gateways/gateways.transactions.php');
 include('gateways/gateway.paypal.php');
 include('gateways/gateway.offline.php');
 include('gateways/gateway.authorize.aim.php');
+include('gateways/gateway.bhaa_realex_redirect.php');
+
