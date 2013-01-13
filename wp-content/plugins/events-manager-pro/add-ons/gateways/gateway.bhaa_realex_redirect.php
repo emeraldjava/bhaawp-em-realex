@@ -368,7 +368,7 @@ BHAA Events Manager
 			  </td>
 		  </tr>
 		  <tr valign="top">
-			  <th scope="row"><?php _e('realex_redirect Merchant secret', 'em-pro') ?></th>
+			  <th scope="row"><?php _e('realex_redirect Merchant Secret', 'em-pro') ?></th>
 				  <td><input type="text" name="<?php echo $this->gateway; ?>_merchant_secret" value="<?php esc_attr_e( get_option('em_'. $this->gateway . "_merchant_secret" )); ?>" />
 				  <br />
 			  </td>
