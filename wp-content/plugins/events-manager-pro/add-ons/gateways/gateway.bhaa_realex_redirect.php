@@ -173,7 +173,7 @@ class EM_Gateway_realex_redirect extends EM_Gateway {
 	function get_realex_redirect_vars($EM_Booking) {//! get realex_redirect vars
 		global $wp_rewrite, $EM_Notices;
 		$price = 0;
-		$sub="false";
+		$sub='false';
 		foreach ( $EM_Booking->get_tickets_bookings()->tickets_bookings as $EM_Ticket_Booking ) {
 			$price += $EM_Ticket_Booking->get_ticket()->get_price();
 			if (strtolower($EM_Ticket_Booking->get_ticket()->ticket_name)=="annual membership") {
@@ -197,6 +197,9 @@ class EM_Gateway_realex_redirect extends EM_Gateway {
 		$md5hash = md5($tmp);
 		$tmp = "$md5hash.$secret";
 		$md5hash = md5($tmp);
+		$booking_id = $EM_Booking->booking_id.':'.$EM_Booking->event_id.':'.$sub;
+		error_log('gateway $booking_id='.$booking_id);
+		
 		//set $_POST vars to be sent
 		$realex_redirect_vars = array(
 			'TIMESTAMP'=> $timestamp,
@@ -208,7 +211,7 @@ class EM_Gateway_realex_redirect extends EM_Gateway {
 			'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'],
 			'COMMENT1' => "Booking ".$EM_Booking->booking_id." for event ".$EM_Booking->event_id,
 			'COMMENT2' => "You're booking for event ".$EM_Booking->event->event_name,
-			'booking_id' => $EM_Booking->booking_id.':'.$EM_Booking->event_id.':'.$sub,
+			'booking_id' => $booking_id,
 			'uid' => $uid,
 			'AUTO_SETTLE_FLAG'=> 1
 		);
@@ -262,12 +265,14 @@ class EM_Gateway_realex_redirect extends EM_Gateway {
 						}
 					}
 				}
-				if ( $_POST['AMOUNT'] >= $EM_Booking->get_price(false, false, true) && (!get_option('em_realex_redirect_manual_approval', false) || !get_option('dbem_bookings_approval')) ) {
+				if ( $_POST['AMOUNT'] >= $EM_Booking->get_price(false, false, true) && (!get_option('em_realex_redirect_manual_approval', false) || !get_option('dbem_bookings_approval')) ) 
+				{
 					$EM_Booking->approve(true, true); //approve and ignore spaces
-				}else {
-					//TODO do something if pp payment not enough
-					$EM_Booking->set_status(0); //Set back to normal "pending"
 				}
+				//else {
+				//	//TODO do something if pp payment not enough
+				//	$EM_Booking->set_status(0); //Set back to normal "pending"
+				//}
 				do_action('em_payment_processed', $EM_Booking, $this);
 				break;
 			case '101':
