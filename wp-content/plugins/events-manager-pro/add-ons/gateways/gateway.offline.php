@@ -8,7 +8,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 
 	var $gateway = 'offline';
 	var $title = 'Offline';
-	var $status = 5; // 5:pending - 1:approved
+	var $status = 1; // 5:pending - 1:approved
 	var $button_enabled = true;
 	var $count_pending_spaces = true;
 
