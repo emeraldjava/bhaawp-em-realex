@@ -208,6 +208,7 @@ class EM_Form extends EM_Object {
 			     echo $this->output_field_input($field, $post);
 			     break;
 			case 'text':
+			case 'hidden':
 			case 'textarea':
 			case 'checkbox':
 			case 'date':
@@ -315,7 +316,12 @@ class EM_Form extends EM_Object {
 				?>
 				<input type="text" name="<?php echo $field_name ?>" id="<?php echo $field['fieldid'] ?>" class="input" value="<?php echo $default; ?>"  />
 				<?php
-				break;	
+				break;
+			case 'hidden':
+				?>
+				<input type="hidden" name="<?php echo $field_name ?>" id="<?php echo $field['fieldid'] ?>" value="<?php echo $default; ?>"  />
+				<?php
+				break;
 			case 'textarea':
 				$size = 'rows="2" cols="20"';
 			    if( defined('EMP_FORMS_TEXTAREA_SIZE') && EMP_FORMS_TEXTAREA_SIZE ){
@@ -491,6 +497,7 @@ class EM_Form extends EM_Object {
 			$result = true; //innocent until proven guilty
 			switch($field['type']){
 				case 'text':
+				case 'hidden':
 				case 'textarea':
 					//regex
 					if( !empty($field['options_text_regex']) && !@preg_match('/'.$field['options_text_regex'].'/',$value) ){
@@ -782,6 +789,7 @@ class EM_Form extends EM_Object {
 								<?php if($custom_fields): ?>
 								<optgroup label="<?php _e('Customizable Fields','em-pro'); ?>">
 									<option <?php self::input_default('type',$field_values,'select','text'); ?>>text</option>
+									<option <?php self::input_default('type',$field_values,'select','hidden'); ?>>hidden</option>
 									<option <?php self::input_default('type',$field_values,'select','html'); ?>>html</option>
 									<option <?php self::input_default('type',$field_values,'select','checkbox'); ?>>checkbox</option>
 									<option <?php self::input_default('type',$field_values,'select','textarea'); ?>>textarea</option>
@@ -1244,7 +1252,7 @@ class EM_Form extends EM_Object {
 						html : ['html'],
 						selection : ['checkboxes','radio'],
 						checkbox : ['checkbox'],
-						text : ['text','textarea','email'],
+						text : ['text','textarea','email','hidden'],
 						registration : ['<?php echo implode("', '", array_keys($this->user_fields)); ?>'],
 						captcha : ['captcha']							
 					}
@@ -1323,5 +1331,4 @@ class EM_Form extends EM_Object {
 		}
 		return false;
 	}
-
 }
