@@ -1,0 +1,66 @@
+/**
+ * Theme Name: BHAA
+ * Theme URI: http://cmbdesign.com
+ * Description: A serene blogging theme that emphasizes your content with readable typography. It uses post formats; has three nav menu locations; and supports one-, two-, and three-column layouts. Updated to resolve a compatibility issue with my life 0.2
+ * Version: 0.3
+ * Author: Ross McKinley
+ * Author URI: http://wrossmck.wordpress.com
+ * Template:   my-life
+ * Tags: theme-options, threaded-comments, microformats, translation-ready, rtl-language-support, one-column, two-columns, three-columns, right-sidebar, left-sidebar, fixed-width, sticky-post, custom-background, custom-header, custom-menu, full-width-template, post-formats, featured-images, featured-image-header
+ * License: GNU General Public License v2.0
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * Copyright (c) 2012 Ross McKinley.  All rights reserved.
+ * http://wrossmck.wordpress.com
+ */
+ 
+@import url("my-life-style.css");
+
+#branding {
+	z-index:0;
+}
+
+#main {
+	min-height: 500px;
+	background:#eeffff;
+	border-bottom:1px solid #1e5a90;
+	border-left:1px solid #1e5a90;
+	border-right:1px solid #1e5a90;
+	border-top:0 solid #1e5a90;
+	color:#666;
+}
+#respond #submit:hover {
+	background:#08345a;
+}
+
+.bhaa-logo {
+	float:left;
+	height:200px;
+	margin-left:100px;
+	margin-top:15px;
+	position:absolute;
+	width:194px;
+}
+
+.header-image {
+	background:#eeffff;
+	border-bottom:0 solid #1e5a90;
+	border-left:1px solid #1e5a90;
+	border-right:1px solid #1e5a90;
+	border-top:1px solid #1e5a90;
+	margin:0 auto;
+	padding:4px;
+}
+
+body {
+	background:url(bg.png) repeat 0 0;
+	border-bottom:5px solid #1e5a90;
+	border-top:5px solid #1e5a90;
+}
+
+label {
+	width:30%;
+	float:left;
+	display: inline;
+	clear: left;
+}

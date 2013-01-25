@@ -1,0 +1,97 @@
+/**
+ * Development stylesheet.  Use this file for development purposes by adding this to your 'wp-config.php' file:
+ * define( 'SCRIPT_DEBUG', true );
+ * This allows you to build large-sized stylesheets with plenty notes and comments. Before releasing, compress
+ * this file and replace the compressed CSS in the 'style.css' file.
+ * @link http://www.cssdrive.com/index.php/main/csscompressor
+ */
+
+/* 25px reset. */
+html,body,div,span,object,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,tt,var,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video{margin:0;padding:0;vertical-align:baseline;outline:none;font-size:100%;background:transparent;border:none;text-decoration:none}
+body{line-height:25px;font-family:Georgia,Times,"Times New Roman",serif;color:#333;background:#fff}h1,h2,h3,h4,h5,h6{font-style:normal;font-weight:normal;margin:0 0 25px 0}h1{font-size:1.8em}h2{font-size:1.7em}h3{font-size:1.55em}h4{font-size:1.4em}h5{font-size:1.25em}h6{font-size:1.1em}p{margin:0 0 25px 0}strong{font-weight:bold}strong strong{font-weight:normal}a{cursor:pointer}a img{border:none}code{font:.9em Monaco,monospace,Courier,"Courier New"}input,textarea{font-size:1em;padding:3px}input[type="submit"]{cursor:pointer}
+/* Body */
+body {
+	display: table;
+	width: 100%;
+	font: normal normal normal 16px/25px Georgia, Palatino, "Palatino Linotype", "Book Antiqua", serif;
+	border-top: 5px solid #847e79;
+	border-bottom: 5px solid #847e79;
+	}
+
+/**
+* Elements
+**************************************/
+
+/* Font sizes and line heights. */
+#main {
+	line-height: 26px;
+	}
+.layout-1c #main {
+	font-size: 17px;
+	line-height: 28px;
+	}
+.layout-3c-l #main, .layout-3c-r #main, .layout-3c-c #main {
+	font-size: 15px;
+	line-height: 24px;
+	}
+
+/* Links */
+a {
+	color: #70a0b2;
+	}
+a:hover {
+	text-decoration: underline;
+	}
+small{
+	font-size: 0.8em;
+}
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'SortsMillGoudyItalic', "Goudy Old Style", Garamond, "Big Caslon", "Times New Roman", serif;
+	}
+
+/* Horizontal rule */
+hr {
+	height: 1px;
+	background: #e2e6e2;
+	}
+
+/**
+* Header
+**************************************/
+
+#header {
+	width: 1010px;
+	height: 50px;
+	margin: 0 auto;
+	padding: 25px 0;
+	}
+#branding {
+	position: relative;
+	z-index: 98;
+	}
+/* Header image */
+.header-image {
+	display: block;
+	width: 1000px;
+	height: 200px;
+	margin: 0 auto 25px auto;
+	padding: 4px;
+	background: #f4f2e7;
+	border: 1px solid #d5d3d1;
+	}
+/**
+* Layouts
+**************************************/
+
+/* Main */
+#main {
+	clear: both;
+	overflow: hidden;
+	width: 908px;
+	margin: 0 auto 25px auto;
+	padding: 50px 50px 0 50px;
+	color: #666;
+	background: #f4f2e7;
+	border: 1px solid #d5d3d1;
+	}
