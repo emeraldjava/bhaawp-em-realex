@@ -29,7 +29,7 @@ function record_transaction($EM_Booking, $amount, $currency, $timestamp, $txn_id
 }
 
 require_once ("wp-config.php");
-error_log("Realex-ipn");
+error_log("realex-ipn");
 $timestamp = $_POST['TIMESTAMP'];
 $orderid = $_POST['ORDER_ID'];
 $result = $_POST['RESULT'];
@@ -71,13 +71,13 @@ if ($timestamp) {
 }
 if ($md5hash != $realexmd5) {
 	$out.="<p>hashes don't match - response not authenticated!<br />This is not an authenticated Realex Request.</p>";
-	error_log("hashes don't match - response not authenticated!");
+	error_log("realex-ipn : hashes don't match - response not authenticated!");
 	file_put_contents('./logs/ipn.csv', $msg."-100000,$user_id,$orderid,$timestamp,$ip".PHP_EOL, FILE_APPEND);
 } 
 else 
 {
 	// md5 is correct. authorised response from RealEx Servers
-	error_log("$result,$user_id,$orderid,$timestamp,$ip");
+	error_log('realex-ipn:'."$result,$user_id,$orderid,$timestamp,$ip");
 	file_put_contents('./logs/ipn.csv', $msg."$result,$user_id,$orderid,$timestamp,$ip".PHP_EOL, FILE_APPEND);
 	//switch the result
 	$new_status = false;
@@ -85,15 +85,15 @@ else
 	$amount = ($_POST['AMOUNT']/100);
 	$currency = $_POST['CURRENCY'];
 
-	error_log('$booking_string='.$_POST['booking_id']);
+	error_log('realex-ipn:$booking_string='.$_POST['booking_id']);
 	$custom_values = explode(':', $_POST['booking_id']);
-	error_log('$booking_id='.$custom_values[0]);
+	error_log('realex-ipn:$booking_id='.$custom_values[0]);
 	$booking_id = !empty($custom_values[0]) ? $custom_values[0]:0;
 	$event_id = !empty($custom_values[1]) ? $custom_values[1]:0;
 	$SUB = strtolower($custom_values[2])=='true'?true:false;
-	error_log('$booking_id='.$booking_id);
-	error_log('$event_id='.$event_id);
-	error_log('$sub='.$SUB);
+	error_log('realex-ipn:$booking_id='.$booking_id);
+	error_log('realex-ipn:$event_id='.$event_id);
+	error_log('realex-ipn:$sub='.$SUB);
 	$EM_Booking = new EM_Booking($booking_id);
 	if ( !empty($EM_Booking->booking_id) && count($custom_values) == 3 ) 
 	{
@@ -106,8 +106,8 @@ else
 		if(trim($membertype)==""){
 			$membertype="D";
 		}
-		
-		
+		error_log('realex-ipn:$membertype='.$membertype);
+				
 		switch ($result) {
 		case '00':// case: successful payment
 			$note="Successful Payment";
@@ -125,42 +125,35 @@ else
 			} else {
 				$EM_Booking->set_status(0); //Set back to normal "pending"
 			}
-			do_action('em_payment_processed', $EM_Booking, $this);
-			
-			
-			
 			
 			//! START CUSTOM TICKET HANDLING AREA
-			
 			switch($membertype){
 			case "D":
 			case "M":
 			case "I":
 			default:
 				foreach($EM_Booking->tickets as $ticket){
-					switch(strtolower($ticket->ticket_name)){
+					switch(strtolower($ticket->ticket_name))
+					{
 						case "annual membership"://process membership
 							update_user_meta( $user_id, "bhaa_runner_status", "M");//! update to an annual role
 							update_user_meta( $user_id, "bhaa_runner_dateofrenewal", $timestamp);//! date of new membership
+							error_log('realex-ipn:annual membership='.$user_id.'-'.$timestamp);
+							
 							break;
 						case "annual member":
 						case "day member":
 						case "inactive member":
 						default:
-						//process ticket specific actions here
+							//process ticket specific actions here
+							error_log('realex-ipn:ticketname='.$ticket->ticket_name);
 							break;
 					}
 				}
-			
 				break;
 			}
-			
+			do_action('em_payment_processed', $EM_Booking, $this);
 			//! END CUSTOM TICKET HANDLING AREA
-			
-			
-			
-			
-			
 			$out.='<p>Thank you, your payment has been successful.<br /><br />To continue browsing please <a href="http://bhaa.ie"><b>return to the bhaa site</b></a><br /><br /></p>';
 			break;
 		case '101':
