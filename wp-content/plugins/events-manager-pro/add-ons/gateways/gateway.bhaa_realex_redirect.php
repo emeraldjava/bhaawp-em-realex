@@ -242,6 +242,7 @@ class EM_Gateway_realex_redirect extends EM_Gateway {
 		$amount = $_POST['AMOUNT'];
 		$currency = $_POST['CURRENCY'];
 		$timestamp = date('Y-m-d H:i:s', strtotime($_POST['payment_date']));
+		error_log('handle_payment_return $booking_id='.$_POST['booking_id']);
 		$custom_values = explode(':', $_POST['booking_id']);
 		$booking_id = $custom_values[0];
 		$event_id = !empty($custom_values[1]) ? $custom_values[1]:0;
@@ -289,25 +290,24 @@ class EM_Gateway_realex_redirect extends EM_Gateway {
 		}else {
 			// ! everything worked!! process payment
 			if ( $result == "00" ) {
-				$message = apply_filters('em_gateway_realex_redirect_bad_booking_email', "
-A Payment has been received by realex for a non-existent booking.
-
-Event Details : %event%
-
-It may be that this user's booking has timed out yet they proceeded with payment at a later stage.
-
-To refund this transaction, you must go to your realex account and search for this transaction:
-
-Transaction ID : %transaction_id%
-Email : %payer_email%
-
-When viewing the transaction details, you should see an option to issue a refund.
-
-If there is still space available, the user must book again.
-
-Sincerely,
-BHAA Events Manager
-			", $booking_id, $event_id);
+				$message = apply_filters('em_gateway_realex_redirect_bad_booking_email',
+				'A Payment has been received by realex for a non-existent booking
+				
+				Event Details : %event%
+				
+				It may be that this user booking session timed out yet they proceeded with payment at a later stage.
+				
+				To refund this transaction, you must go to your realex account and search for this transaction:
+				
+				Transaction ID : %transaction_id%
+				Email : %payer_email%
+				
+				When viewing the transaction details, you should see an option to issue a refund.
+				
+				If there is still space available, the user must book again.
+				
+				Sincerely,
+				BHAA Events Manager', $booking_id, $event_id);
 				if ( !empty($event_id) ) {
 					$EM_Event = new EM_Event($event_id);
 					$event_details = $EM_Event->name . " - " . date_i18n(get_option('date_format'), $EM_Event->start);
