@@ -59,11 +59,12 @@ $out='<!DOCTYPE html>
 $msg="";
 if (!file_exists('./logs')) {
 	mkdir('./logs');
-	$msg='$status,$user_id,$orderid,$timestamp,$ip'.PHP_EOL;
+	//$msg='$status,$user_id,$orderid,$timestamp,$ip'.PHP_EOL;
 }
-if(!file_exists('../logs/ipn.csv')){
-	$msg='$status,$user_id,$orderid,$timestamp,$ip'.PHP_EOL;
-}
+//if(!file_exists('../logs/ipn.csv')){
+//	$msg='$status,$user_id,$orderid,$timestamp,$ip'.PHP_EOL;
+//}
+
 if ($timestamp) {
 	$timestamp = date('Y-m-d', strtotime($timestamp));
 } else {
@@ -100,6 +101,7 @@ else
 		//booking exists
 		$EM_Booking->manage_override = true; //since we're overriding the booking ourselves.
 		$user_id = $EM_Booking->person_id;
+		error_log('realex-ipn:$user_id='.$user_id);
 		// process realex_redirect response
 		
 		$membertype = get_user_meta($user_id,"bhaa_runner_status",true);
@@ -136,10 +138,11 @@ else
 					switch(strtolower($ticket->ticket_name))
 					{
 						case "annual membership"://process membership
-							update_user_meta( $user_id, "bhaa_runner_status", "M");//! update to an annual role
-							update_user_meta( $user_id, "bhaa_runner_dateofrenewal", $timestamp);//! date of new membership
-							error_log('realex-ipn:annual membership='.$user_id.'-'.$timestamp);
+							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "M");//! update to an annual role
+							error_log('realex-ipn:AM bhaa_runner_status='.$user_id.'-'.$status_res);
 							
+							$date_res = update_user_meta( $user_id, "bhaa_runner_dateofrenewal", $timestamp);//! date of new membership
+							error_log('realex-ipn:AM bhaa_runner_dateofrenewal='.$timestamp.'-'.$date_res);
 							break;
 						case "annual member":
 						case "day member":
@@ -154,7 +157,7 @@ else
 			}
 			do_action('em_payment_processed', $EM_Booking, $this);
 			//! END CUSTOM TICKET HANDLING AREA
-			$out.='<p>Thank you, your payment has been successful.<br /><br />To continue browsing please <a href="http://bhaa.ie"><b>return to the bhaa site</b></a><br /><br /></p>';
+			$out.='<p>Thank you, your payment has been successful.<br /><br />To continue browsing please return to <a href="'.site_url().'"><b>'.site_url().'</b></a><br /><br /></p>';
 			break;
 		case '101':
 		case '102':// case: denied
@@ -162,12 +165,12 @@ else
 			record_transaction($EM_Booking, $amount, $currency, $timestamp, $_POST['order_id'], $result, $note);
 			$EM_Booking->cancel();
 			do_action('em_payment_denied', $EM_Booking, $this);
-			$out .= '<p>There was an error processing your payment.<br />To try again please <a href="http://bhaa.ie/events">go back to the bhaa event page.</a></p>';
+			$out .= '<p>There was an error processing your payment.<br />To try again please go back to the <a href="'.site_url().'"><b>'.site_url().'</b></a> event page</p>';
 			break;
 		default:
-			$out .= '<p>There was an error processing your payment.<br />To try again please <a href="http://bhaa.ie/events">go back to the bhaa event page.</a></p>';
+			$out .= '<p>There was an error processing your payment.<br />To try again please go back to the <a href="'.site_url().'"><b>'.site_url().'</b></a> event page</p>';
 		}
-	$out.='<p><small>You have been sent an email to the account: '.$event_details["user_email"].' to confirm these details.</small></p>';
+	$out.='<p><small>You have been sent an email to the account: <b>'.$EM_Booking->get_person()->user_email.'</b> to confirm these details.</small></p>';
 	}
 	else 
 	{
