@@ -138,14 +138,15 @@ else
 					switch(strtolower($ticket->ticket_name))
 					{
 						case "annual membership"://process membership
-							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "M");//! update to an annual role
-							error_log('realex-ipn:AM bhaa_runner_status='.$user_id.'-'.$status_res);
+							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "M");
+							error_log('realex-ipn:AM bhaa_runner_status='.$user_id.':'.$status_res);
 							
-							$date_res = update_user_meta( $user_id, "bhaa_runner_dateofrenewal", $timestamp);//! date of new membership
-							error_log('realex-ipn:AM bhaa_runner_dateofrenewal='.$timestamp.'-'.$date_res);
+							$date_res = update_user_meta( $user_id, "bhaa_runner_dateofrenewal", $timestamp);
+							error_log('realex-ipn:AM bhaa_runner_dateofrenewal='.$timestamp.':'.$date_res);
 							break;
-						case "annual member":
 						case "day member":
+							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "M");
+							error_log('realex-ipn:DAY MEMBER bhaa_runner_status='.$user_id.':'.$status_res);
 						case "inactive member":
 						default:
 							//process ticket specific actions here
