@@ -403,25 +403,15 @@ class EM_Form extends EM_Object {
 				</select>
 				<?php
 				break;
-			case 'house':
+			case 'housex':
 				// default arguments
 				$args = array (
 					'id' => $field_name,
 					'name' => $field_name,
 					'echo' => 1,
-					'post_type' => 'house'
+					'post_type' => 'house',
+					'exclude' => 89
 				);
-				
-// 				$args['tax_query'] = array(
-// 					array(
-// 						'taxonomy'  => 'teamtype',
-// 						'field'     => 'slug',
-// 						'terms'     => 'sector', // exclude house posts in the sectorteam custom teamtype taxonomy
-// 						'operator'  => 'NOT IN')	
-// 				);
-// 				var_dump($args);
-				//error_log(printf($args));
-				// check if a company is set
 				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
 				//error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
 				// set the correct defaults for new or existing user
@@ -432,6 +422,43 @@ class EM_Form extends EM_Object {
 					$args = array_merge( $args, array( 'selected' => intval($selected) ) );
 				}
 				wp_dropdown_pages($args);
+			break;
+			case 'house':
+				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
+				//error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
+				
+				$houseQuery = new WP_Query(
+					array(
+						'post_type' => 'house',
+						'order'		=> 'ASC',
+						'post_status' => 'publish',
+						'orderby' 	=> 'title',
+						'nopaging' => true,
+						'tax_query'	=> array(
+							array(
+								'taxonomy'  => 'teamtype',
+								'field'     => 'slug',
+								'terms'     => 'sector', // exclude house posts in the sectorteam custom teamtype taxonomy
+								'operator'  => 'NOT IN')
+						)));
+
+				if( $houseQuery->have_posts() ) :
+				//echo '<div class="ui-widget">';
+				echo '<select id="bhaa_runner_company" name="bhaa_runner_company">';
+				echo '<option value="">Select your company...</option>';
+				while ($houseQuery->have_posts()) : $houseQuery->the_post();
+				
+				if(get_the_ID()==$selected) {
+					error_log('bhaa_runner_company selected '.get_current_user_id().' = $'.$selected);
+					echo sprintf('<option value="%d" selected="selected">%s</option>',get_the_ID(),get_the_title(get_the_ID()));
+				} else
+					echo sprintf('<option value="%d">%s</option>',get_the_ID(),get_the_title(get_the_ID()));
+	
+				endwhile;
+				echo '</select>';
+				//echo '</div>';
+				endif;
+				wp_reset_postdata();
 				break; 
 			case 'country':
 				?>
