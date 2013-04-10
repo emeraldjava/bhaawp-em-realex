@@ -406,11 +406,21 @@ class EM_Form extends EM_Object {
 			case 'house':
 				// default arguments
 				$args = array (
-					'id' => 'bhaa_runner_house',
-					'name' => 'bhaa_runner_house',
+					'id' => $field_name,
+					'name' => $field_name,
 					'echo' => 1,
 					'post_type' => 'house'
 				);
+				
+// 				$args['tax_query'] = array(
+// 					array(
+// 						'taxonomy'  => 'teamtype',
+// 						'field'     => 'slug',
+// 						'terms'     => 'sector', // exclude house posts in the sectorteam custom teamtype taxonomy
+// 						'operator'  => 'NOT IN')	
+// 				);
+// 				var_dump($args);
+				//error_log(printf($args));
 				// check if a company is set
 				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
 				//error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
@@ -533,6 +543,7 @@ class EM_Form extends EM_Object {
 	function validate_field( $field_id, $value ){
 		$field = array_key_exists($field_id, $this->form_fields) ? $this->form_fields[$field_id]:false;
 		$value = (is_array($value)) ? $value:trim($value);
+		//error_log('validate_field '.$field_id.' '.$value);
 		$err = sprintf($this->form_required_error, $field['label']);
 		if( is_array($field) ){
 			$result = true; //innocent until proven guilty
@@ -603,6 +614,14 @@ class EM_Form extends EM_Object {
 						$this->add_error($this_err);
 						$result = false;
 					}				
+					break;
+				case 'house':
+					error_log('validate house '.$value);
+					//non-empty match
+					if( $result && trim($value) == '' && !empty($field['required']) ){
+						$this->add_error($err);
+						$result = false;
+					}
 					break;
 				case 'country':
 					$values = em_get_countries(__('none selected','dbem'));
@@ -1285,7 +1304,7 @@ class EM_Form extends EM_Object {
 				$('#<?php echo $form_name; ?>').delegate('.booking-form-custom-type', 'change', function(){
 					$('.bct-options').slideUp();
 					var type_keys = {
-						select : ['select','multiselect'],
+						select : ['select','multiselect','house'],
 						country : ['country'],
 						date : ['date'],
 						time : ['time'],
