@@ -277,7 +277,56 @@ class EM_Gateway_Offline extends EM_Gateway {
 			//set flag that we're manually booking here, and set gateway to offline
 			if( !defined('EM_FORCE_REGISTRATION') && (empty($_REQUEST['person_id']) || $_REQUEST['person_id'] < 0) ) define('EM_FORCE_REGISTRATION', true);
 		}
+		$person_id = $EM_Booking->get_person()->get("ID");
+		$ticket_name = strtolower($EM_Booking->tickets_bookings->ticket->ticket_name);
+		$event_name = $EM_Event->event_name;
+		error_log(sprintf("offline gateway booking_add %d %s %s ",$person_id,$event_name,$ticket_name));
+		$EM_Booking->get_person()->user_email='paul.oconnell@aegon.ie';
+
 		parent::booking_add($EM_Event, $EM_Booking, $post_validation);
+		
+		$this->realex();
+	}
+	
+	function realex($person_id,$EM_Booking)
+	{
+		error_log("realex");
+		$membertype = get_user_meta($user_id,"bhaa_runner_status",true);
+		if(trim($membertype)==""){
+			$membertype="D";
+		}
+		error_log('realex-ipn:$membertype='.$person_id.':'.$membertype);
+		
+		$timestamp = date('Y-m-d', strtotime($timestamp));
+		
+		switch($membertype){
+			case "D":
+			case "M":
+			case "I":
+			default:
+				foreach($EM_Booking->tickets as $ticket) {
+					error_log(strtolower($ticket->ticket_name));
+					switch(strtolower($ticket->ticket_name))
+					{
+						case "annual membership"://process membership
+							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "M");
+							error_log('realex-ipn:AM bhaa_runner_status='.$user_id.':'.$status_res);
+								
+							$date_res = update_user_meta( $user_id, "bhaa_runner_dateofrenewal", $timestamp);
+							error_log('realex-ipn:AM bhaa_runner_dateofrenewal='.$timestamp.':'.$date_res);
+							break;
+						case "day member":
+							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "D");
+							error_log('realex-ipn:DAY MEMBER bhaa_runner_status='.$user_id.':'.$status_res);
+						case "inactive member":
+						default:
+							//process ticket specific actions here
+							error_log('realex-ipn:ticketname='.$ticket->ticket_name);
+							break;
+					}
+				}
+				break;
+		}
 	}
 	
 	/**
@@ -301,6 +350,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 			$add_txt = '<a href=\"'.wp_get_referer().'\">'.__('Add another booking','em-pro').'</a>';
 			add_filter('em_action_booking_add', create_function('$feedback', '$feedback["message"] = $feedback["message"] . "<p>'.$add_txt.'</p>"; return $feedback;'));
 		}
+		error_log("offline gateway em_booking_save");
 		return $result;
 	}
 	
