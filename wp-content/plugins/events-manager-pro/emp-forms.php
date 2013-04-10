@@ -449,13 +449,25 @@ class EM_Form extends EM_Object {
 				while ($houseQuery->have_posts()) : $houseQuery->the_post();
 				
 				if(get_the_ID()==$selected) {
-					error_log('bhaa_runner_company selected '.get_current_user_id().' = $'.$selected);
+					//error_log('bhaa_runner_company selected '.get_current_user_id().' = $'.$selected);
 					echo sprintf('<option value="%d" selected="selected">%s</option>',get_the_ID(),get_the_title(get_the_ID()));
 				} else
 					echo sprintf('<option value="%d">%s</option>',get_the_ID(),get_the_title(get_the_ID()));
 	
 				endwhile;
-				echo '</select>';
+				echo '</select><script type="text/javascript">
+jQuery(function() {
+	jQuery("#bhaa_runner_company").change(function() {
+		//alert(jQuery(this).val());
+		var str = "";
+		jQuery("#bhaa_runner_company option:selected").each(function () {
+        	str += jQuery(this).text();
+      	});
+		//console.debug(str);
+		jQuery("#bhaa_runner_companyname").val(str);
+	});
+});
+</script>';
 				//echo '</div>';
 				endif;
 				wp_reset_postdata();
