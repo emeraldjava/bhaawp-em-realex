@@ -655,7 +655,7 @@ jQuery(function() {
 					}				
 					break;
 				case 'house':
-					error_log('validate house '.$value);
+					//error_log('validate house '.$value);
 					//non-empty match
 					if( $result && trim($value) == '' && !empty($field['required']) ){
 						$this->add_error($err);
