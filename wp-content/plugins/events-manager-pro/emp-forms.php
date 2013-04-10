@@ -217,12 +217,13 @@ class EM_Form extends EM_Object {
 			case 'checkboxes':
 			case 'radio':
 			case 'select':
+			case 'house':
 			case 'country':
 			case 'multiselect':
 			case 'time':
 				$tip_type = $field['type'];
 				if( $field['type'] == 'textarea' ) $tip_type = 'text';
-				if( in_array($field['type'], array('select','multiselect')) ) $tip_type = 'select';
+				if( in_array($field['type'], array('select','multiselect','house')) ) $tip_type = 'select';
 				if( in_array($field['type'], array('checkboxes','radio')) ) $tip_type = 'selection';
 				?>
 				<p class="input-group input-<?php echo $field['type']; ?> input-field-<?php echo $field['fieldid'] ?>">
@@ -402,6 +403,26 @@ class EM_Form extends EM_Object {
 				</select>
 				<?php
 				break;
+			case 'house':
+				// default arguments
+				$args = array (
+					'id' => 'bhaa_runner_house',
+					'name' => 'bhaa_runner_house',
+					'echo' => 1,
+					'post_type' => 'house'
+				);
+				// check if a company is set
+				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
+				//error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
+				// set the correct defaults for new or existing user
+				if($selected==0) {
+					$show_option_none='Please select a company';
+					$args = array_merge( $args, array( 'show_option_none' => $show_option_none ) );
+				} else {
+					$args = array_merge( $args, array( 'selected' => intval($selected) ) );
+				}
+				wp_dropdown_pages($args);
+				break; 
 			case 'country':
 				?>
 				<select name="<?php echo $field_name ?>" class="<?php echo $field['fieldid'] ?>">
@@ -816,6 +837,7 @@ class EM_Form extends EM_Object {
 									<option <?php self::input_default('type',$field_values,'select','select'); ?>>select</option>
 									<option <?php self::input_default('type',$field_values,'select','multiselect'); ?>>multiselect</option>
 									<option <?php self::input_default('type',$field_values,'select','country'); ?>>country</option>
+									<option <?php self::input_default('type',$field_values,'select','house'); ?>>house</option>
 									<option <?php self::input_default('type',$field_values,'select','date'); ?>>date</option>
 									<option <?php self::input_default('type',$field_values,'select','time'); ?>>time</option>
 									<?php if($captcha_fields): ?>
