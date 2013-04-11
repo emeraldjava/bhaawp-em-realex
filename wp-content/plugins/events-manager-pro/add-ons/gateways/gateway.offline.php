@@ -1,7 +1,8 @@
 <?php
 
 /**
- * This Gateway is slightly special, because as well as providing functions that need to be activated, there are offline payment functions that are always there e.g. adding manual payments.
+ * This Gateway is slightly special, because as well as providing functions that need to be activated, 
+ * there are offline payment functions that are always there e.g. adding manual payments.
  * @author marcus
  */
 class EM_Gateway_Offline extends EM_Gateway {
@@ -10,7 +11,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 	var $title = 'Offline';
 	var $status = 1; // 5:pending - 1:approved
 	var $button_enabled = true;
-	var $count_pending_spaces = true;
+	var $count_pending_spaces = false;
 
 	/**
 	 * Sets up gateway and registers actions/filters
@@ -30,6 +31,8 @@ class EM_Gateway_Offline extends EM_Gateway {
 		add_action('em_bookings_manual_booking', array(&$this, 'add_booking_form'),1,1);
 		add_filter('em_booking_get_post', array(&$this,'em_booking_get_post'),1,2);
 		add_filter('em_booking_validate', array(&$this,'em_booking_validate'),9,2); //before EM_Bookings_Form hooks in
+		
+		add_filter('em_bookings_add',array(&$this,'bhaa_em_bookings_add'),1,2);
 	}
 	
 	/**
@@ -91,9 +94,14 @@ class EM_Gateway_Offline extends EM_Gateway {
 				if( !empty($EM_Booking->email_not_sent) ){
 					$return['message'] .=  ' '.get_option('dbem_booking_feedback_nomail');
 				}
+				//error_log('EM_Gateway_Offline call filter em_gateway_offline_booking_add '.$EM_Booking->booking_id);
 				return apply_filters('em_gateway_offline_booking_add', $return, $EM_Booking->get_event(), $EM_Booking);
 			}
-		}						
+		}			
+		error_log('EM_Gateway_Offline booking_form_feedback '.$EM_Booking->booking_id);
+		foreach($EM_Booking->get_tickets()->tickets as $EM_Ticket)
+			error_log('EM_Gateway_Offline booking_form_feedback '.$EM_Ticket->ticket_name);
+		
 		return $return;
 	}
 	
@@ -106,6 +114,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 		if($status == 1 && $EM_Booking->previous_status == $this->status && $this->uses_gateway($EM_Booking) && (empty($_REQUEST['action']) || $_REQUEST['action'] != 'gateway_add_payment') ){
 			$this->record_transaction($EM_Booking, $EM_Booking->get_price(false,false,true), get_option('dbem_bookings_currency'), current_time('mysql'), '', 'Completed', '');								
 		}
+		error_log('EM_Gateway_Offline em_booking_set_status '.$EM_Booking->booking_id);
 		return $status;
 	}
 	
@@ -264,7 +273,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 	 * @param EM_Booking $EM_Booking
 	 * @param boolean $post_validation
 	 */
-	function booking_add($EM_Event,$EM_Booking, $post_validation = false){
+	function booking_add($EM_Event,$EM_Booking,$post_validation = false){
 		global $wpdb, $wp_rewrite, $EM_Notices;
 		//manual bookings
 		if( !empty($_REQUEST['manual_booking']) && wp_verify_nonce($_REQUEST['manual_booking'], 'em_manual_booking_'.$_REQUEST['event_id']) ){
@@ -277,26 +286,92 @@ class EM_Gateway_Offline extends EM_Gateway {
 			//set flag that we're manually booking here, and set gateway to offline
 			if( !defined('EM_FORCE_REGISTRATION') && (empty($_REQUEST['person_id']) || $_REQUEST['person_id'] < 0) ) define('EM_FORCE_REGISTRATION', true);
 		}
-		$person_id = $EM_Booking->get_person()->get("ID");
-		$ticket_name = strtolower($EM_Booking->tickets_bookings->ticket->ticket_name);
-		$event_name = $EM_Event->event_name;
-		error_log(sprintf("offline gateway booking_add %d %s %s ",$person_id,$event_name,$ticket_name));
-		$EM_Booking->get_person()->user_email='paul.oconnell@aegon.ie';
-
-		parent::booking_add($EM_Event, $EM_Booking, $post_validation);
 		
-		$this->realex();
+		parent::booking_add($EM_Event,$EM_Booking,$post_validation);
+		error_log('EM_Gateway_Offline booking_add '.$EM_Booking->booking_id);
+		//$this->x($EM_Booking);
 	}
 	
-	function realex($person_id,$EM_Booking)
+	function bhaa_em_bookings_add($result,$EM_Booking) {
+		error_log('EM_Gateway_Offline bhaa_em_bookings_add '.$result.', booking:'.$EM_Booking->booking_id);
+	}
+	
+	function x($EM_Booking)
 	{
-		error_log("realex");
+		$person_id = $EM_Booking->get_person()->get("ID");
+		
+		$EM_Booking->get_tickets();
+		$EM_Booking->get_tickets_bookings();
+		
+		//$ticket_booking_name = strtolower($EM_Booking->tickets_bookings->ticket->ticket_name);
+		$ticket_name = strtolower($EM_Booking->get_tickets()->get_first()->ticket_name);
+		
+		$event_name = $EM_Event->event_name;
+		error_log(sprintf("offline gateway booking_add %d %d %s ticket_name:%s person:%s",$EM_Booking->booking_id,$person_id,$event_name,$ticket_name,$EM_Booking->get_person()->get_name()));
+		//error_log('$EM_Booking->get_tickets()->get_first()'.print_r($EM_Booking->get_tickets()->get_first(),true));
+		
+		$EM_Booking->get_person()->user_email='paul.oconnell@aegon.ie';
+		
+		//$this->realex($person_id,$EM_Booking);
 		$membertype = get_user_meta($user_id,"bhaa_runner_status",true);
 		if(trim($membertype)==""){
 			$membertype="D";
 		}
 		error_log('realex-ipn:$membertype='.$person_id.':'.$membertype);
+		$timestamp = date('Y-m-d', strtotime($timestamp));
 		
+		//error_log('$timestamp '.$timestamp);
+		//error_log('$EM_Booking->get_tickets_bookings()->ticket '.print_r($EM_Booking->get_tickets_bookings()->ticket,true));
+		
+		switch($membertype)
+		{
+			case "D":
+			case "M":
+			case "I":
+			default:
+		
+				$ticket = $EM_Booking->get_tickets()->get_first();
+				//$ticket = $EM_Booking->get_tickets()->get_first();
+				error_log('Ticket : '.print_r($ticket,true));
+		
+				error_log('Ticket : '.strtolower($ticket->ticket_name));
+				//		error_log('Ticket : '.print_r($ticket->ticket,true));
+		
+				//				foreach($EM_Booking->get_tickets_bookings()-> as $ticket) {
+				//				error_log('bookingTicket : '.strtolower($ticket->ticket->ticket_name));
+				//			error_log('bookingTicket : '.print_r($ticket->ticket,true));
+				switch(strtolower($ticket->ticket_name))
+				{
+					case "annual membership"://process membership
+						$status_res = update_user_meta( $user_id, "bhaa_runner_status", "M");
+						error_log('realex-ipn:AM bhaa_runner_status='.$user_id.':'.$status_res);
+		
+						$date_res = update_user_meta( $user_id, "bhaa_runner_dateofrenewal", $timestamp);
+						error_log('realex-ipn:AM bhaa_runner_dateofrenewal='.$timestamp.':'.$date_res);
+						break;
+					case "day member":
+						$status_res = update_user_meta( $user_id, "bhaa_runner_status", "D");
+						error_log('realex-ipn:DAY MEMBER bhaa_runner_status='.$user_id.':'.$status_res);
+					case "inactive member":
+					default:
+						//process ticket specific actions here
+						error_log('realex-ipn:ticketname='.$ticket->ticket_name);
+						break;
+				}
+				//}
+				break;
+		}
+	}
+	
+	function realex($person_id,$EM_Booking)
+	{
+		error_log("realex ".$person_id);
+		$membertype = get_user_meta($user_id,"bhaa_runner_status",true);
+		if(trim($membertype)==""){
+			$membertype="D";
+		}
+		error_log('realex-ipn:$membertype='.$person_id.':'.$membertype);
+		error_log(print_r($EM_Booking->tickets,true));
 		$timestamp = date('Y-m-d', strtotime($timestamp));
 		
 		switch($membertype){
@@ -304,8 +379,11 @@ class EM_Gateway_Offline extends EM_Gateway {
 			case "M":
 			case "I":
 			default:
+				
+				
 				foreach($EM_Booking->tickets as $ticket) {
-					error_log(strtolower($ticket->ticket_name));
+					error_log('Ticket : '.strtolower($ticket->ticket_name));
+					error_log('Ticket : '.print_r($ticket,true));
 					switch(strtolower($ticket->ticket_name))
 					{
 						case "annual membership"://process membership
