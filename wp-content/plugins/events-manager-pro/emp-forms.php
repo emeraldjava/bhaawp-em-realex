@@ -403,27 +403,48 @@ class EM_Form extends EM_Object {
 				</select>
 				<?php
 				break;
-			case 'housex':
+			case 'house':
+				
+				$sectorTeamQuery = new WP_Query(
+						array(
+								'post_type' => 'house',
+								'order'		=> 'ASC',
+								'post_status' => 'publish',
+								//'fields' => 'ids', 
+								'orderby' 	=> 'title',
+								'nopaging' => true,
+								'tax_query'	=> array(
+										array(
+												'taxonomy'  => 'teamtype',
+												'field'     => 'slug',
+												'terms'     => 'sector', // exclude house posts in the sectorteam custom teamtype taxonomy
+												'operator'  => 'IN')
+								)
+						)
+				);
+				//error_log('$sectorTeamQuery '.print_r($sectorTeamQuery,true));
+				$csv = implode(',',array_map(array($this,'get_id'), $sectorTeamQuery->posts) );
+				//error_log('$csv '.$csv);
 				// default arguments
 				$args = array (
 					'id' => $field_name,
 					'name' => $field_name,
 					'echo' => 1,
 					'post_type' => 'house',
-					'exclude' => 89
+					'exclude' => $csv
 				);
 				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
-				//error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
+				error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
 				// set the correct defaults for new or existing user
 				if($selected==0) {
-					$show_option_none='Please select a company';
-					$args = array_merge( $args, array( 'show_option_none' => $show_option_none ) );
+					$args = array_merge( $args, array( 'show_option_none' => 'Please select a company' ) );
+					$args = array_merge( $args, array( 'option_none_value' => '1' ) );
 				} else {
 					$args = array_merge( $args, array( 'selected' => intval($selected) ) );
 				}
 				wp_dropdown_pages($args);
 			break;
-			case 'house':
+			case 'housexx':
 				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
 				//error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
 				
@@ -553,6 +574,10 @@ jQuery(function() {
 				break;
 		}	
 		return apply_filters('emp_forms_output_field_input', ob_get_clean(), $this, $field, $post);	
+	}
+	
+	private function get_id($val) {
+		return $val->ID;
 	}
 	
 	/**
