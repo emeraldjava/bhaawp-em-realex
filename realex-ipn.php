@@ -140,14 +140,13 @@ else
 						case "annual membership"://process membership
 							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "M");
 							error_log('realex-ipn:AM bhaa_runner_status='.$user_id.':'.$status_res);
-							
 							$date_res = update_user_meta( $user_id, "bhaa_runner_dateofrenewal", $timestamp);
 							error_log('realex-ipn:AM bhaa_runner_dateofrenewal='.$timestamp.':'.$date_res);
 							break;
-						case "day member":
-							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "M");
+						case "day member ticket":
+							$status_res = update_user_meta( $user_id, "bhaa_runner_status", "D");
 							error_log('realex-ipn:DAY MEMBER bhaa_runner_status='.$user_id.':'.$status_res);
-						case "inactive member":
+						// "bhaa member ticket"
 						default:
 							//process ticket specific actions here
 							error_log('realex-ipn:ticketname='.$ticket->ticket_name);
