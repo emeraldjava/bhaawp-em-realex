@@ -98,10 +98,9 @@ class EM_Gateway_Offline extends EM_Gateway {
 				return apply_filters('em_gateway_offline_booking_add', $return, $EM_Booking->get_event(), $EM_Booking);
 			}
 		}			
-		error_log('EM_Gateway_Offline booking_form_feedback '.$EM_Booking->booking_id);
-		foreach($EM_Booking->get_tickets()->tickets as $EM_Ticket)
-			error_log('EM_Gateway_Offline booking_form_feedback '.$EM_Ticket->ticket_name);
-		
+		//error_log('EM_Gateway_Offline booking_form_feedback '.$EM_Booking->booking_id);
+		//foreach($EM_Booking->get_tickets()->tickets as $EM_Ticket)
+			//error_log('EM_Gateway_Offline booking_form_feedback '.$EM_Ticket->ticket_name);
 		return $return;
 	}
 	
@@ -114,7 +113,7 @@ class EM_Gateway_Offline extends EM_Gateway {
 		if($status == 1 && $EM_Booking->previous_status == $this->status && $this->uses_gateway($EM_Booking) && (empty($_REQUEST['action']) || $_REQUEST['action'] != 'gateway_add_payment') ){
 			$this->record_transaction($EM_Booking, $EM_Booking->get_price(false,false,true), get_option('dbem_bookings_currency'), current_time('mysql'), '', 'Completed', '');								
 		}
-		error_log('EM_Gateway_Offline em_booking_set_status '.$EM_Booking->booking_id);
+		//error_log('EM_Gateway_Offline em_booking_set_status '.$EM_Booking->booking_id);
 		return $status;
 	}
 	
@@ -288,12 +287,13 @@ class EM_Gateway_Offline extends EM_Gateway {
 		}
 		
 		parent::booking_add($EM_Event,$EM_Booking,$post_validation);
-		error_log('EM_Gateway_Offline booking_add '.$EM_Booking->booking_id);
-		//$this->x($EM_Booking);
+		//error_log('EM_Gateway_Offline booking_add '.$EM_Booking->booking_id);
 	}
 	
 	function bhaa_em_bookings_add($result,$EM_Booking) {
 		error_log('EM_Gateway_Offline bhaa_em_bookings_add '.$result.', booking:'.$EM_Booking->booking_id);
+		$this->x($EM_Booking);
+		return $result;
 	}
 	
 	function x($EM_Booking)
