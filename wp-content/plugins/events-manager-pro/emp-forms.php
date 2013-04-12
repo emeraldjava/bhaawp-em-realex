@@ -443,6 +443,20 @@ class EM_Form extends EM_Object {
 					$args = array_merge( $args, array( 'selected' => intval($selected) ) );
 				}
 				wp_dropdown_pages($args);
+				echo '<script type="text/javascript">
+jQuery(function() {
+	jQuery("#bhaa_runner_company").change(function() {
+		//alert(jQuery(this).val());
+		var str = "";
+		jQuery("#bhaa_runner_company option:selected").each(function () {
+        	str += jQuery(this).text();
+      	});
+		jQuery("#bhaa_runner_companyname").val(str);
+		//console.debug(str);
+		//console.debug(jQuery("#bhaa_runner_companyname").val());
+	});
+});
+</script>';
 			break;
 			case 'housexx':
 				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
