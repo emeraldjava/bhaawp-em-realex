@@ -433,14 +433,16 @@ class EM_Form extends EM_Object {
 					'post_type' => 'house',
 					'exclude' => $csv
 				);
-				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
-				error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
+
+				global $current_user, $user_id;
+				$selected = get_user_meta($user_id,'bhaa_runner_company',true);
+				//error_log($user_id.'. bhaa_runner_company = '.$selected);
 				// set the correct defaults for new or existing user
 				if($selected==0) {
 					$args = array_merge( $args, array( 'show_option_none' => 'Please select a company' ) );
 					$args = array_merge( $args, array( 'option_none_value' => '1' ) );
 				} else {
-					$args = array_merge( $args, array( 'selected' => intval($selected) ) );
+					$args = array_merge( $args, array( 'selected' => $selected ) );
 				}
 				wp_dropdown_pages($args);
 				echo '<script type="text/javascript">
