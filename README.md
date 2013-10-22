@@ -20,6 +20,7 @@ Header set Cache-Control "max-age=172800, public"
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
+RewriteCond %{REQUEST_FILENAME} = "realex-ipn.php"
 RewriteRule ^/realex-ipn\.php$ - [L]
 RewriteRule ^index\.php$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
