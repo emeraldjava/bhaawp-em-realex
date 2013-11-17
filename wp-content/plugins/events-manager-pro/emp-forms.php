@@ -24,9 +24,9 @@ class EM_Forms {
 	}
 	
 	function admin_options(){
+		global $save_button;
 		if( current_user_can('list_users') ){
 		?>
-			<a name="pro-forms"></a>
 			<div  class="postbox " id="em-opt-pro-booking-form-options" >
 			<div class="handlediv" title="<?php __('Click to toggle', 'dbem'); ?>"><br /></div><h3 class='hndle'><span><?php _e ( 'PRO Booking Form Options', 'em-pro' ); ?> </span></h3>
 			<div class="inside">
@@ -36,6 +36,7 @@ class EM_Forms {
 						em_options_radio_binary ( __( 'Make profile fields editable?', 'em-pro' ), 'dbem_emp_booking_form_reg_input', __( 'If profile fields are set to show to logged in users, you can also choose whether or not to make these fields editable or just for viewing reference.','em-pro' ) );
 					?>
 				</table>
+				<?php echo $save_button; ?> 
 			</div> <!-- . inside -->
 			</div> <!-- .postbox -->
 		<?php
@@ -92,16 +93,17 @@ class EM_Form extends EM_Object {
 		foreach($this->form_fields as $field){
 		    $fieldid = $field['fieldid'];
 			$value = '';
-			if( isset($_REQUEST[$fieldid]) && $_REQUEST[$fieldid] != '' ){
-				if( !is_array($_REQUEST[$fieldid])){
-					$this->field_values[$fieldid] = wp_kses_data(stripslashes($_REQUEST[$fieldid]));
-				}elseif( is_array($_REQUEST[$fieldid])){
-				    $array = array();
-				    foreach( $_REQUEST[$fieldid] as $key => $array_value ){
-				        $array[$key] = wp_kses_data(stripslashes($array_value));
-				    }
-					$this->field_values[$fieldid] = $array;
-				}
+			if( !isset($_REQUEST[$fieldid]) ){ //for things like checkboxes when editing
+			    $_REQUEST[$fieldid] = '';
+			}
+			if( !is_array($_REQUEST[$fieldid])){
+				$this->field_values[$fieldid] = wp_kses_data(stripslashes($_REQUEST[$fieldid]));
+			}elseif( is_array($_REQUEST[$fieldid])){
+			    $array = array();
+			    foreach( $_REQUEST[$fieldid] as $key => $array_value ){
+			        $array[$key] = wp_kses_data(stripslashes($array_value));
+			    }
+				$this->field_values[$fieldid] = $array;
 			}
 			//if this is a custom user field, change $filed to the original field so the right date/time info is retreived
 	    	if( array_key_exists($field['type'], $this->custom_user_fields) && array_key_exists($field['fieldid'], $custom_user_fields) ){
@@ -142,7 +144,7 @@ class EM_Form extends EM_Object {
 		//output formatted value for special fields
 		switch( $field['type'] ){
 			case 'checkbox':
-				$field_value = ($field_value) ? __('Yes','dbem'):__('No','dbem');
+				$field_value = ($field_value && $field_value != 'n/a') ? __('Yes','dbem'):__('No','dbem');
 				break;
 			case 'date':
 			    //split ranges (or create single array) and format, then re-implode
@@ -189,6 +191,26 @@ class EM_Form extends EM_Object {
 	}
 	
 	/**
+	 * Returns true if this field is not a user field or an html field, meaning it is stored information not at a user-account level, false if not.
+	 * @param mixed $field_or_id
+	 * @return boolean
+	 */
+	public function is_normal_field( $field_or_id ){
+        $field_id = is_array($field_or_id) ? $field_or_id['fieldid'] : $field_or_id;
+	    return array_key_exists($field_id, $this->form_fields) && !array_key_exists($field_id, $this->user_fields) && !in_array($field_id, array('user_email','user_name')) && $this->form_fields[$field_id]['type'] != 'html';
+	}
+	
+	/**
+	 * Returns true if this is a field stored as at a user-account level, false if not.
+	 * @param mixed $field_or_id
+	 * @return boolean
+	 */
+	public function is_user_field( $field_or_id ){
+        $field_id = ( is_object($field_or_id) ) ? $field_or_id['fieldid'] : $field_or_id;
+	    return array_key_exists($field_id, $this->user_fields) || in_array($field_id, array('user_email','user_name'));
+	}
+	
+	/**
 	 * Prints html fields according to this field structure.
 	 * @param array $booking_form_fields
 	 */
@@ -210,20 +232,18 @@ class EM_Form extends EM_Object {
 			     echo $this->output_field_input($field, $post);
 			     break;
 			case 'text':
-			case 'hidden':
 			case 'textarea':
 			case 'checkbox':
 			case 'date':
 			case 'checkboxes':
 			case 'radio':
 			case 'select':
-			case 'house':
 			case 'country':
 			case 'multiselect':
 			case 'time':
 				$tip_type = $field['type'];
 				if( $field['type'] == 'textarea' ) $tip_type = 'text';
-				if( in_array($field['type'], array('select','multiselect','house')) ) $tip_type = 'select';
+				if( in_array($field['type'], array('select','multiselect')) ) $tip_type = 'select';
 				if( in_array($field['type'], array('checkboxes','radio')) ) $tip_type = 'selection';
 				?>
 				<p class="input-group input-<?php echo $field['type']; ?> input-field-<?php echo $field['fieldid'] ?>">
@@ -319,6 +339,7 @@ class EM_Form extends EM_Object {
 	function output_field_input($field, $post=true){
 		ob_start();
 		$default = '';
+		$default_html = '';
 		if($post === true && !empty($_REQUEST[$field['fieldid']])) {
 			$default = is_array($_REQUEST[$field['fieldid']]) ? $_REQUEST[$field['fieldid']]:esc_attr($_REQUEST[$field['fieldid']]);
 			$default_html = esc_attr($_REQUEST[$field['fieldid']]);
@@ -335,12 +356,7 @@ class EM_Form extends EM_Object {
 				?>
 				<input type="text" name="<?php echo $field_name ?>" id="<?php echo $field['fieldid'] ?>" class="input" value="<?php echo $default; ?>"  />
 				<?php
-				break;
-			case 'hidden':
-				?>
-				<input type="hidden" name="<?php echo $field_name ?>" id="<?php echo $field['fieldid'] ?>" value="<?php echo $default; ?>"  />
-				<?php
-				break;
+				break;	
 			case 'textarea':
 				$size = 'rows="2" cols="20"';
 			    if( defined('EMP_FORMS_TEXTAREA_SIZE') && EMP_FORMS_TEXTAREA_SIZE ){
@@ -357,7 +373,7 @@ class EM_Form extends EM_Object {
 				break;
 			case 'checkbox':
 				?>
-				<input type="checkbox" name="<?php echo $field_name ?>" id="<?php echo $field['fieldid'] ?>" value="1" <?php if($default || $field['options_checkbox_checked']) echo 'checked="checked"'; ?> />
+				<input type="checkbox" name="<?php echo $field_name ?>" id="<?php echo $field['fieldid'] ?>" value="1" <?php if( ($default && $default != 'n/a') || $field['options_checkbox_checked']) echo 'checked="checked"'; ?> />
 				<?php
 				break;
 			case 'checkboxes':
@@ -403,112 +419,6 @@ class EM_Form extends EM_Object {
 				</select>
 				<?php
 				break;
-			case 'house':
-				
-				$sectorTeamQuery = new WP_Query(
-						array(
-								'post_type' => 'house',
-								'order'		=> 'ASC',
-								'post_status' => 'publish',
-								//'fields' => 'ids', 
-								'orderby' 	=> 'title',
-								'nopaging' => true,
-								'tax_query'	=> array(
-										array(
-												'taxonomy'  => 'teamtype',
-												'field'     => 'slug',
-												'terms'     => 'sector', // exclude house posts in the sectorteam custom teamtype taxonomy
-												'operator'  => 'IN')
-								)
-						)
-				);
-				//error_log('$sectorTeamQuery '.print_r($sectorTeamQuery,true));
-				$csv = implode(',',array_map(array($this,'get_id'), $sectorTeamQuery->posts) );
-				//error_log('$csv '.$csv);
-				// default arguments
-				$args = array (
-					'id' => $field_name,
-					'name' => $field_name,
-					'echo' => 1,
-					'post_type' => 'house',
-					'exclude' => $csv
-				);
-
-				global $current_user, $user_id;
-				$selected = get_user_meta($user_id,'bhaa_runner_company',true);
-				//error_log($user_id.'. bhaa_runner_company = '.$selected);
-				// set the correct defaults for new or existing user
-				if($selected==0) {
-					$args = array_merge( $args, array( 'show_option_none' => 'Please select a company' ) );
-					$args = array_merge( $args, array( 'option_none_value' => '1' ) );
-				} else {
-					$args = array_merge( $args, array( 'selected' => $selected ) );
-				}
-				wp_dropdown_pages($args);
-				echo '<script type="text/javascript">
-jQuery(function() {
-	jQuery("#bhaa_runner_company").change(function() {
-		//alert(jQuery(this).val());
-		var str = "";
-		jQuery("#bhaa_runner_company option:selected").each(function () {
-        	str += jQuery(this).text();
-      	});
-		jQuery("#bhaa_runner_companyname").val(str);
-		//console.debug(str);
-		//console.debug(jQuery("#bhaa_runner_companyname").val());
-	});
-});
-</script>';
-			break;
-			case 'housexx':
-				$selected = get_user_meta(get_current_user_id(),'bhaa_runner_company',true);
-				//error_log('bhaa_runner_company '.get_current_user_id().' = $'.$selected);
-				
-				$houseQuery = new WP_Query(
-					array(
-						'post_type' => 'house',
-						'order'		=> 'ASC',
-						'post_status' => 'publish',
-						'orderby' 	=> 'title',
-						'nopaging' => true,
-						'tax_query'	=> array(
-							array(
-								'taxonomy'  => 'teamtype',
-								'field'     => 'slug',
-								'terms'     => 'sector', // exclude house posts in the sectorteam custom teamtype taxonomy
-								'operator'  => 'NOT IN')
-						)));
-
-				if( $houseQuery->have_posts() ) :
-				//echo '<div class="ui-widget">';
-				echo '<select id="bhaa_runner_company" name="bhaa_runner_company">';
-				echo '<option value="">Select your company...</option>';
-				while ($houseQuery->have_posts()) : $houseQuery->the_post();
-				
-				if(get_the_ID()==$selected) {
-					//error_log('bhaa_runner_company selected '.get_current_user_id().' = $'.$selected);
-					echo sprintf('<option value="%d" selected="selected">%s</option>',get_the_ID(),get_the_title(get_the_ID()));
-				} else
-					echo sprintf('<option value="%d">%s</option>',get_the_ID(),get_the_title(get_the_ID()));
-	
-				endwhile;
-				echo '</select><script type="text/javascript">
-jQuery(function() {
-	jQuery("#bhaa_runner_company").change(function() {
-		//alert(jQuery(this).val());
-		var str = "";
-		jQuery("#bhaa_runner_company option:selected").each(function () {
-        	str += jQuery(this).text();
-      	});
-		//console.debug(str);
-		jQuery("#bhaa_runner_companyname").val(str);
-	});
-});
-</script>';
-				//echo '</div>';
-				endif;
-				wp_reset_postdata();
-				break; 
 			case 'country':
 				?>
 				<select name="<?php echo $field_name ?>" class="<?php echo $field['fieldid'] ?>">
@@ -551,7 +461,7 @@ jQuery(function() {
 						$default[] = $_REQUEST[$field_name]['end'];
 					}
 				}else{
-					$default = explode(',',$default);
+					if( !is_array($default) ) $default = explode(',',$default);
 					if( !empty($default[0]) && !preg_match('/^([01]\d|2[0-3]):([0-5]\d) ?(AM|PM)?$/', $default[0]) ) $default = ''; //make sure the value is a date
 				}
 				//we're adding a [%s] to the field id and replacing this for the start-end field names because this way other bits (e.g. attendee forms) can manipulate where the [start] and [end] are placed in the element name. 
@@ -592,10 +502,6 @@ jQuery(function() {
 		return apply_filters('emp_forms_output_field_input', ob_get_clean(), $this, $field, $post);	
 	}
 	
-	private function get_id($val) {
-		return $val->ID;
-	}
-	
 	/**
 	 * Validates all fields, if false, an array of objects is returned.
 	 * @return array|string
@@ -623,21 +529,17 @@ jQuery(function() {
 	function validate_field( $field_id, $value ){
 		$field = array_key_exists($field_id, $this->form_fields) ? $this->form_fields[$field_id]:false;
 		$value = (is_array($value)) ? $value:trim($value);
-		//error_log('validate_field '.$field_id.' '.$value);
 		$err = sprintf($this->form_required_error, $field['label']);
 		if( is_array($field) ){
 			$result = true; //innocent until proven guilty
 			switch($field['type']){
 				case 'text':
-				case 'hidden':
 				case 'textarea':
 					//regex
-					if( !empty($field['options_text_regex']) && !@preg_match('/'.$field['options_text_regex'].'/',$value) ){
-						if( !($value == '' && $field['required']) ){
-							$this_err = (!empty($field['options_text_error'])) ? $field['options_text_error']:$err;
-							$this->add_error($this_err);
-							$result = false;
-						}
+					if( trim($value) != '' && !empty($field['options_text_regex']) && !@preg_match('/'.$field['options_text_regex'].'/',$value) ){
+						$this_err = (!empty($field['options_text_error'])) ? $field['options_text_error']:$err;
+						$this->add_error($this_err);
+						$result = false;
 					}
 					//non-empty match
 					if( $result && trim($value) == '' && !empty($field['required']) ){
@@ -668,7 +570,7 @@ jQuery(function() {
 					$values = explode("\r\n",$field['options_selection_values']);
 					array_walk($values,'trim');
 					//in-values
-					if( (!in_array($value, $values) || empty($value)) && !empty($field['required']) ){
+					if( (!empty($value) && !in_array($value, $values)) || (empty($value) && !empty($field['required'])) ){
 						$this_err = (!empty($field['options_selection_error'])) ? $field['options_selection_error']:$err;
 						$this->add_error($this_err);
 						$result = false;
@@ -689,24 +591,16 @@ jQuery(function() {
 					$values = explode("\r\n",$field['options_select_values']);
 					array_walk($values,'trim');
 					//in-values
-					if( (!in_array($value, $values) || empty($value)) && !empty($field['required']) ){
+					if( (!empty($value) && !in_array($value, $values)) || (empty($value) && !empty($field['required'])) ){
 						$this_err = (!empty($field['options_select_error'])) ? $field['options_select_error']:$err;
 						$this->add_error($this_err);
 						$result = false;
 					}				
 					break;
-				case 'house':
-					//error_log('validate house '.$value);
-					//non-empty match
-					if( $result && trim($value) == '' && !empty($field['required']) ){
-						$this->add_error($err);
-						$result = false;
-					}
-					break;
 				case 'country':
 					$values = em_get_countries(__('none selected','dbem'));
 					//in-values
-					if( (!array_key_exists($value, $values) || empty($value)) && !empty($field['required']) ){
+					if( (!empty($value) && !array_key_exists($value, $values)) || (empty($value) && !empty($field['required'])) ){
 						$this_err = (!empty($field['options_select_error'])) ? $field['options_select_error']:$err;
 						$this->add_error($this_err);
 						$result = false;
@@ -809,16 +703,14 @@ jQuery(function() {
 						if( is_user_logged_in() && !get_option('dbem_emp_booking_form_reg_input') ) break;
 						//add field-specific validation
 						if ( $field['type'] == 'user_email' && ! is_email( $value ) ) {
-							$this->add_error( __( 'The email address isn&#8217;t correct.', 'dbem') );
+							$this->add_error( __( '<strong>ERROR</strong>: The email address isn&#8217;t correct.', 'dbem') );
 							$result = false;
 						}
 						//regex
-						if( !empty($field['options_reg_regex']) && !@preg_match('/'.$field['options_reg_regex'].'/',$value) ){
-							if( !($value == '' && !$field['required']) ){
-								$this_err = (!empty($field['options_reg_error'])) ? $field['options_reg_error']:$err;
-								$this->add_error($this_err);
-								$result = false;
-							}
+						if( trim($value) != '' && !empty($field['options_reg_regex']) && !@preg_match('/'.$field['options_reg_regex'].'/',$value) ){
+							$this_err = (!empty($field['options_reg_error'])) ? $field['options_reg_error']:$err;
+							$this->add_error($this_err);
+							$result = false;
 						}
 						//non-empty match
 						if( empty($value) && !empty($field['required']) ){
@@ -927,7 +819,6 @@ jQuery(function() {
 								<?php if($custom_fields): ?>
 								<optgroup label="<?php _e('Customizable Fields','em-pro'); ?>">
 									<option <?php self::input_default('type',$field_values,'select','text'); ?>>text</option>
-									<option <?php self::input_default('type',$field_values,'select','hidden'); ?>>hidden</option>
 									<option <?php self::input_default('type',$field_values,'select','html'); ?>>html</option>
 									<option <?php self::input_default('type',$field_values,'select','checkbox'); ?>>checkbox</option>
 									<option <?php self::input_default('type',$field_values,'select','textarea'); ?>>textarea</option>
@@ -936,7 +827,6 @@ jQuery(function() {
 									<option <?php self::input_default('type',$field_values,'select','select'); ?>>select</option>
 									<option <?php self::input_default('type',$field_values,'select','multiselect'); ?>>multiselect</option>
 									<option <?php self::input_default('type',$field_values,'select','country'); ?>>country</option>
-									<option <?php self::input_default('type',$field_values,'select','house'); ?>>house</option>
 									<option <?php self::input_default('type',$field_values,'select','date'); ?>>date</option>
 									<option <?php self::input_default('type',$field_values,'select','time'); ?>>time</option>
 									<?php if($captcha_fields): ?>
@@ -1384,7 +1274,7 @@ jQuery(function() {
 				$('#<?php echo $form_name; ?>').delegate('.booking-form-custom-type', 'change', function(){
 					$('.bct-options').slideUp();
 					var type_keys = {
-						select : ['select','multiselect','house'],
+						select : ['select','multiselect'],
 						country : ['country'],
 						date : ['date'],
 						time : ['time'],
@@ -1460,7 +1350,7 @@ jQuery(function() {
 				if( is_array($value) && in_array($key,$fields_map) ){
 					foreach($value as $item_index => $item_value){
 						if( !empty($_REQUEST['fieldid'][$item_index]) ){
-							$item_value = stripslashes(wp_kses($item_value, $allowedposttags));
+							$item_value = preg_replace('/  +/', ' ', stripslashes(wp_kses($item_value, $allowedposttags)));
 							$this->form_fields[$_REQUEST['fieldid'][$item_index]][$key] = $item_value;
 						}
 					}
@@ -1470,5 +1360,4 @@ jQuery(function() {
 		}
 		return false;
 	}
-
 }
