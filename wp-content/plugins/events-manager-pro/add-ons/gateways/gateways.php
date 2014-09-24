@@ -457,4 +457,3 @@ include('gateways.transactions.php');
 include('gateway.paypal.php');
 include('gateway.offline.php');
 include('gateway.authorize.aim.php');
-include('gateway.bhaa_realex_redirect.php');
